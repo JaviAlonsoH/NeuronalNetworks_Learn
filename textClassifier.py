@@ -4,7 +4,7 @@ import numpy as np
 
 data = keras.datasets.imdb
 
-(train_data, train_labels), (test_data, test_labels) = data.load_data(num_words=10000)
+(train_data, train_labels), (test_data, test_labels) = data.load_data(num_words=88000)
 
 word_index = data.get_word_index()
 
@@ -26,9 +26,9 @@ def decode_review(text):
 
 
 # model down here
-
+'''
 model = keras.Sequential()
-model.add(keras.layers.Embedding(10000, 16))
+model.add(keras.layers.Embedding(88000, 16))
 model.add(keras.layers.GlobalAveragePooling1D())
 model.add(keras.layers.Dense(16, activation="relu"))
 model.add(keras.layers.Dense(1, activation="sigmoid"))
@@ -48,10 +48,42 @@ fit_model = model.fit(x_train, y_train, epochs=40, batch_size=512, validation_da
 results = model.evaluate(test_data, test_labels)
 print(results)
 
-test_review = test_data[0]
+model.save("model.h5")'''
+
+model = keras.models.load_model("model.h5")
+
+def review_encode(s):
+    encoded = [1]
+    for word in s:
+        if word.lower() in word_index:
+            encoded.append(word_index[word.lower()])
+        else:
+            encoded.append(2)
+
+    return encoded
+
+
+with open('review.txt', encoding="utf-8") as f:
+    for line in f.readlines():
+        nline = line.replace(",", "")\
+            .replace(".", "")\
+            .replace("(", "")\
+            .replace(")", "")\
+            .replace(":", "")\
+            .replace("\"", "")\
+            .strip().split(" ")
+        encode = review_encode(nline)
+        encode = keras.preprocessing.sequence.pad_sequences([encode], value=word_index["<PAD>"], padding="post",
+                                                        maxlen=250)
+        predict = model.predict(encode)
+        print(line)
+        print(encode)
+        print(predict[0])
+
+'''test_review = test_data[0]
 print(test_review)
 predict = model.predict([tf.expand_dims(test_review, axis=0)])
 print("Review: ")
 print(decode_review(test_review))
 print("Prediction: " + str(predict[0]))
-print("Actual: " + str(test_labels[0]))
+print("Actual: " + str(test_labels[0]))'''
